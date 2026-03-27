@@ -1,0 +1,208 @@
+/* ------------------------------------------------------------------ */
+/* Hero — layout override (centered single column)                     */
+/* ------------------------------------------------------------------ */
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 5rem 2rem 4rem;
+    gap: 3.5rem;
+    max-width: var(--max-width);
+    margin: 0 auto;
+}
+
+.hero-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* ------------------------------------------------------------------ */
+/* Badge                                                               */
+/* ------------------------------------------------------------------ */
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: normal;
+    text-transform: none;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(26, 71, 42, 0.15);
+    margin-bottom: 1.75rem;
+}
+
+.badge-dot {
+    font-size: 0.5rem;
+    line-height: 1;
+    color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Title                                                               */
+/* ------------------------------------------------------------------ */
+
+.hero-title {
+    font-size: clamp(2.75rem, 6vw, 4.5rem);
+    line-height: 1.08;
+    margin-bottom: 1.25rem;
+}
+
+.hero-title-accent {
+    display: block;
+    color: var(--accent);
+    font-style: normal;
+}
+
+/* ------------------------------------------------------------------ */
+/* Subtitle                                                            */
+/* ------------------------------------------------------------------ */
+
+.hero-subtitle {
+    max-width: 600px;
+    font-size: 1.05rem;
+    color: var(--ink-muted);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* CTA buttons — both solid dark, pill-shaped                          */
+/* ------------------------------------------------------------------ */
+
+.hero-actions {
+    justify-content: center;
+}
+
+.hero-btn {
+    border-radius: 999px;
+    padding: 0.75rem 1.75rem;
+    font-size: 0.95rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero visual — full-width browser mock                               */
+/* ------------------------------------------------------------------ */
+
+.hero-visual {
+    width: 100%;
+    max-width: 820px;
+    display: flex;
+    justify-content: center;
+}
+
+.mock-browser {
+    width: 100%;
+    background: var(--paper-warm);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.07);
+}
+
+/* Browser chrome bar */
+.mock-browser-bar {
+    background: var(--paper-warm);
+    border-bottom: 1px solid var(--border);
+    padding: 0.7rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.mock-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.mock-dot-red    { background: #ff5f57; }
+.mock-dot-yellow { background: #febc2e; }
+.mock-dot-green  { background: #28c840; }
+
+/* Browser body */
+.mock-browser-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Stat cards                                                          */
+/* ------------------------------------------------------------------ */
+
+.mock-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.mock-stat-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    text-align: left;
+}
+
+.mock-stat-label {
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+    margin-bottom: 0.35rem;
+}
+
+.mock-stat-value {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    color: var(--ink);
+    line-height: 1.1;
+    margin-bottom: 0.3rem;
+}
+
+.mock-stat-note {
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+}
+
+.mock-note-danger { color: var(--danger); }
+.mock-note-accent { color: var(--accent); }
+
+/* ------------------------------------------------------------------ */
+/* Category bars (2-column, no amount label)                          */
+/* ------------------------------------------------------------------ */
+
+.mock-bars-browser { gap: 0.85rem; }
+
+.mock-bar-row-browser {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.mock-bar-orange { background: var(--accent-2); }
+.mock-bar-blue   { background: #4a90d9; }
+.mock-bar-purple { background: #7c5cbf; }
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                          */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 900px) {
+    .mock-stats { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 600px) {
+    .hero-visual { display: none; }
+    .mock-stats  { grid-template-columns: 1fr; }
+}
