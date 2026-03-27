@@ -51,6 +51,8 @@ Use the defined CSS custom properties and component classes — do not introduce
 
 **Form classes:** `.form-group`, `.form-label`, `.form-input`.
 
+**Legal/prose page classes:** `.legal-section`, `.legal-container`, `.legal-header`, `.legal-card`. Use these for Terms, Privacy Policy, and similar document pages instead of auth classes.
+
 **Breakpoints:** `@media (max-width: 900px)` and `@media (max-width: 600px)`.
 
 ## Authentication Pattern
