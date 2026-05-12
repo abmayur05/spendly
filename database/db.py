@@ -90,3 +90,46 @@ def seed_db():
     )
     conn.commit()
     conn.close()
+
+
+def get_user_by_id(user_id):
+    conn = get_db()
+    user = conn.execute(
+        "SELECT id, name, email, created_at FROM users WHERE id = ?",
+        (user_id,),
+    ).fetchone()
+    conn.close()
+    return user
+
+
+def get_expenses_by_user(user_id):
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT id, amount, category, date, description"
+        " FROM expenses WHERE user_id = ? ORDER BY date DESC",
+        (user_id,),
+    ).fetchall()
+    conn.close()
+    return rows
+
+
+def get_expense_stats(user_id):
+    conn = get_db()
+    row = conn.execute(
+        "SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total"
+        " FROM expenses WHERE user_id = ?",
+        (user_id,),
+    ).fetchone()
+    conn.close()
+    return row
+
+
+def get_category_totals(user_id):
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT category, SUM(amount) as total"
+        " FROM expenses WHERE user_id = ? GROUP BY category ORDER BY total DESC",
+        (user_id,),
+    ).fetchall()
+    conn.close()
+    return rows

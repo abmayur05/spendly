@@ -1,9 +1,18 @@
+import datetime
 import sqlite3
 
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
-from database.db import create_user, get_user_by_email, init_db
+from database.db import (
+    create_user,
+    get_category_totals,
+    get_expense_stats,
+    get_expenses_by_user,
+    get_user_by_email,
+    get_user_by_id,
+    init_db,
+)
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-change-me"
@@ -101,39 +110,62 @@ def profile():
     if not session.get("user_id"):
         return redirect(url_for("login"))
 
+    user_id = session["user_id"]
+    user = get_user_by_id(user_id)
+    if user is None:
+        abort(404)
+
+    # ---- USER INFO SECTION ------------------------------------------------
+    raw_name = user["name"]
+    words = raw_name.split()
+    initials = "".join(w[0].upper() for w in words)[:2]
+    member_since = datetime.datetime.strptime(user["created_at"][:10], "%Y-%m-%d").strftime("%d %B %Y")
     user_info = {
-        "name": "Demo User",
-        "email": "demo@spendly.com",
-        "member_since": "1 April 2026",
-        "initials": "DU",
+        "name": raw_name,
+        "email": user["email"],
+        "member_since": member_since,
+        "initials": initials,
     }
+    # ---- END USER INFO SECTION --------------------------------------------
 
-    stats = {
-        "total_spent": "₹3,800.00",
-        "transaction_count": 8,
-        "top_category": "Bills",
-    }
+    # ---- CATEGORY DATA (shared by stats + breakdown) ----------------------
+    category_rows = get_category_totals(user_id)
+    # ---- END CATEGORY DATA ------------------------------------------------
 
+    # ---- TRANSACTIONS SECTION ---------------------------------------------
+    expense_rows = get_expenses_by_user(user_id)
     transactions = [
-        {"date": "08 Apr 2026", "description": "Lunch with colleagues",  "category": "Food",          "amount": "₹180.00"},
-        {"date": "07 Apr 2026", "description": "New earphones",          "category": "Shopping",      "amount": "₹800.00"},
-        {"date": "06 Apr 2026", "description": "Movie tickets",          "category": "Entertainment", "amount": "₹500.00"},
-        {"date": "05 Apr 2026", "description": "Pharmacy — vitamins",    "category": "Health",        "amount": "₹350.00"},
-        {"date": "03 Apr 2026", "description": "Electricity bill",       "category": "Bills",         "amount": "₹1,200.00"},
-        {"date": "02 Apr 2026", "description": "Metro card recharge",    "category": "Transport",     "amount": "₹120.00"},
-        {"date": "01 Apr 2026", "description": "Groceries from D-Mart",  "category": "Food",          "amount": "₹450.00"},
-        {"date": "08 Apr 2026", "description": "Miscellaneous",          "category": "Other",         "amount": "₹200.00"},
+        {
+            "date": datetime.datetime.strptime(row["date"], "%Y-%m-%d").strftime("%d %b %Y"),
+            "description": row["description"] or "",
+            "category": row["category"],
+            "amount": f"₹{row['amount']:,.2f}",
+        }
+        for row in expense_rows
     ]
+    # ---- END TRANSACTIONS SECTION -----------------------------------------
 
+    # ---- STATS SECTION ----------------------------------------------------
+    expense_stats = get_expense_stats(user_id)
+    top_category = category_rows[0]["category"] if category_rows else "—"
+    stats = {
+        "total_spent": f"₹{expense_stats['total']:,.2f}",
+        "transaction_count": expense_stats["count"],
+        "top_category": top_category,
+    }
+    # ---- END STATS SECTION ------------------------------------------------
+
+    # ---- CATEGORIES SECTION -----------------------------------------------
+    grand_total = sum(row["total"] for row in category_rows)
     categories = [
-        {"name": "Bills",         "amount": "₹1,200.00", "pct": 32},
-        {"name": "Shopping",      "amount": "₹800.00",   "pct": 21},
-        {"name": "Food",          "amount": "₹630.00",   "pct": 17},
-        {"name": "Entertainment", "amount": "₹500.00",   "pct": 13},
-        {"name": "Health",        "amount": "₹350.00",   "pct": 9},
-        {"name": "Other",         "amount": "₹200.00",   "pct": 5},
-        {"name": "Transport",     "amount": "₹120.00",   "pct": 3},
+        {
+            "name": row["category"],
+            "amount": f"₹{row['total']:,.2f}",
+            "pct": round((row["total"] / grand_total) * 100) if grand_total else 0,
+        }
+        for row in category_rows
     ]
+    # ---- END CATEGORIES SECTION -------------------------------------------
 
     return render_template(
         "profile.html",
