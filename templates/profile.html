@@ -18,6 +18,28 @@
             </div>
         </div>
 
+        <!-- Date filter bar -->
+        <form class="filter-bar" method="GET" action="{{ url_for('profile') }}">
+            {% for preset in presets %}
+                {% if preset.date_from %}
+                    {% set href = url_for("profile", date_from=preset.date_from, date_to=preset.date_to) %}
+                {% else %}
+                    {% set href = url_for("profile") %}
+                {% endif %}
+                {% set active = (date_from == preset.date_from and date_to == preset.date_to) %}
+                <a href="{{ href }}" class="filter-preset{% if active %} filter-preset--active{% endif %}">
+                    {{ preset.label }}
+                </a>
+            {% endfor %}
+            <div class="filter-divider"></div>
+            <input class="filter-date-input" type="date" name="date_from"
+                   value="{{ date_from or '' }}">
+            <span class="filter-sep">to</span>
+            <input class="filter-date-input" type="date" name="date_to"
+                   value="{{ date_to or '' }}">
+            <button class="filter-apply" type="submit">Apply</button>
+        </form>
+
         <!-- Stats row -->
         <div class="stats-row">
             <div class="stat-card">

@@ -19,6 +19,28 @@ app.secret_key = "dev-secret-change-me"
 
 
 # ------------------------------------------------------------------ #
+# Date filter helpers                                                 #
+# ------------------------------------------------------------------ #
+
+def _parse_date(val):
+    try:
+        return datetime.date.fromisoformat(val) if val else None
+    except ValueError:
+        return None
+
+
+def _month_start(d):
+    return d.replace(day=1)
+
+
+def _months_ago(d, n):
+    month = d.month - n - 1
+    year  = d.year + month // 12
+    month = month % 12 + 1
+    return d.replace(year=year, month=month, day=1)
+
+
+# ------------------------------------------------------------------ #
 # Routes                                                              #
 # ------------------------------------------------------------------ #
 
@@ -128,12 +150,64 @@ def profile():
     }
     # ---- END USER INFO SECTION --------------------------------------------
 
+    # ---- DATE FILTER SECTION ----------------------------------------------
+    today = datetime.date.today()
+
+    from_raw = request.args.get("date_from", "")
+    to_raw   = request.args.get("date_to", "")
+
+    date_from = _parse_date(from_raw)
+    date_to   = _parse_date(to_raw)
+
+    # If a param was supplied but invalid, discard both (malformed → no filter)
+    if from_raw and date_from is None:
+        date_to = None
+    if to_raw and date_to is None:
+        date_from = None
+
+    if date_from and date_to and date_from > date_to:
+        flash("Start date must be before end date.", "error")
+        date_from = date_to = None
+
+    # Single-param submitted (other was genuinely absent) → single-day filter
+    if date_from and not date_to and not to_raw:
+        date_to = date_from
+    elif date_to and not date_from and not from_raw:
+        date_from = date_to
+
+    date_from_str = date_from.isoformat() if date_from else None
+    date_to_str   = date_to.isoformat()   if date_to   else None
+
+    presets = [
+        {
+            "label": "This Month",
+            "date_from": _month_start(today).isoformat(),
+            "date_to":   today.isoformat(),
+        },
+        {
+            "label": "Last 3 Months",
+            "date_from": _months_ago(today, 3).isoformat(),
+            "date_to":   today.isoformat(),
+        },
+        {
+            "label": "Last 6 Months",
+            "date_from": _months_ago(today, 6).isoformat(),
+            "date_to":   today.isoformat(),
+        },
+        {
+            "label": "All Time",
+            "date_from": None,
+            "date_to":   None,
+        },
+    ]
+    # ---- END DATE FILTER SECTION ------------------------------------------
+
     # ---- CATEGORY DATA (shared by stats + breakdown) ----------------------
-    category_rows = get_category_totals(user_id)
+    category_rows = get_category_totals(user_id, date_from_str, date_to_str)
     # ---- END CATEGORY DATA ------------------------------------------------
 
     # ---- TRANSACTIONS SECTION ---------------------------------------------
-    expense_rows = get_expenses_by_user(user_id)
+    expense_rows = get_expenses_by_user(user_id, date_from_str, date_to_str)
     transactions = [
         {
             "date": datetime.datetime.strptime(row["date"], "%Y-%m-%d").strftime("%d %b %Y"),
@@ -146,7 +220,7 @@ def profile():
     # ---- END TRANSACTIONS SECTION -----------------------------------------
 
     # ---- STATS SECTION ----------------------------------------------------
-    expense_stats = get_expense_stats(user_id)
+    expense_stats = get_expense_stats(user_id, date_from_str, date_to_str)
     top_category = category_rows[0]["category"] if category_rows else "—"
     stats = {
         "total_spent": f"₹{expense_stats['total']:,.2f}",
@@ -173,6 +247,9 @@ def profile():
         stats=stats,
         transactions=transactions,
         categories=categories,
+        date_from=date_from_str,
+        date_to=date_to_str,
+        presets=presets,
     )
 
 
