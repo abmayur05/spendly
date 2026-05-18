@@ -102,34 +102,43 @@ def get_user_by_id(user_id):
     return user
 
 
-def get_expenses_by_user(user_id):
+def _date_clause(date_from, date_to):
+    if date_from and date_to:
+        return "AND date BETWEEN ? AND ?", (date_from, date_to)
+    return "", ()
+
+
+def get_expenses_by_user(user_id, date_from=None, date_to=None):
+    clause, params = _date_clause(date_from, date_to)
     conn = get_db()
     rows = conn.execute(
-        "SELECT id, amount, category, date, description"
-        " FROM expenses WHERE user_id = ? ORDER BY date DESC",
-        (user_id,),
+        f"SELECT id, amount, category, date, description"
+        f" FROM expenses WHERE user_id = ? {clause} ORDER BY date DESC",
+        (user_id, *params),
     ).fetchall()
     conn.close()
     return rows
 
 
-def get_expense_stats(user_id):
+def get_expense_stats(user_id, date_from=None, date_to=None):
+    clause, params = _date_clause(date_from, date_to)
     conn = get_db()
     row = conn.execute(
-        "SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total"
-        " FROM expenses WHERE user_id = ?",
-        (user_id,),
+        f"SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total"
+        f" FROM expenses WHERE user_id = ? {clause}",
+        (user_id, *params),
     ).fetchone()
     conn.close()
     return row
 
 
-def get_category_totals(user_id):
+def get_category_totals(user_id, date_from=None, date_to=None):
+    clause, params = _date_clause(date_from, date_to)
     conn = get_db()
     rows = conn.execute(
-        "SELECT category, SUM(amount) as total"
-        " FROM expenses WHERE user_id = ? GROUP BY category ORDER BY total DESC",
-        (user_id,),
+        f"SELECT category, SUM(amount) as total"
+        f" FROM expenses WHERE user_id = ? {clause} GROUP BY category ORDER BY total DESC",
+        (user_id, *params),
     ).fetchall()
     conn.close()
     return rows
